@@ -42,14 +42,13 @@ Shader "KiroshiZoom/Display"
                 float3 eyeAnchor = mul(unity_ObjectToWorld, float4(0,0,0,1)).xyz;
                 clip(0.35 - distance(_WorldSpaceCameraPos, eyeAnchor));
                 float2 p = abs(i.uv - 0.5);
-                float border = step(0.485, max(p.x, p.y));
                 float crosshair = (1-step(0.0015,p.x))*step(p.y,0.018)
                                 + (1-step(0.0015,p.y))*step(p.x,0.018);
                 float aspect = _ScreenParams.x / _ScreenParams.y;
                 float2 uv = (i.uv - 0.5) * float2(1, 1 / aspect) + 0.5;
                 uv.y = lerp(uv.y, 1 - uv.y, _FlipY);
                 fixed3 scene = tex2D(_MainTex, uv).rgb;
-                return fixed4(lerp(scene, fixed3(0.05,1,0.8), saturate(border+crosshair)),1);
+                return fixed4(lerp(scene, fixed3(0.05,1,0.8), saturate(crosshair)),1);
             }
             ENDCG
         }
