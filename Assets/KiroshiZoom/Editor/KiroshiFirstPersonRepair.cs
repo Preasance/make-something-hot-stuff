@@ -75,7 +75,12 @@ namespace KiroshiZoom
             mesh.bounds = new Bounds(Vector3.zero, Vector3.one * 20);
             AssetDatabase.CreateAsset(mesh, AssetDatabase.GenerateUniqueAssetPath(folder + "/FirstPersonDisplay.asset"));
             Undo.RecordObject(filter, "Assign display bounds"); filter.sharedMesh = mesh;
-            Undo.RecordObject(camera, "Set square capture aspect"); camera.aspect = 1;
+            Undo.RecordObject(camera, "Configure world-only capture"); camera.aspect = 1;
+            // Explicit world layers; exclude player/UI layers and the display itself.
+            camera.cullingMask = (1 << 0) | (1 << 4) | (1 << 11);
+            camera.clearFlags = CameraClearFlags.Skybox;
+            camera.backgroundColor = Color.gray;
+            camera.nearClipPlane = 0.1f;
             Undo.RecordObject(scope.gameObject, "Default optics off"); scope.gameObject.SetActive(false);
             AssetDatabase.SaveAssets();
             EditorUtility.SetDirty(avatar);

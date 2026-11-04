@@ -1,6 +1,10 @@
 Shader "KiroshiZoom/Display"
 {
-    Properties { _MainTex ("Zoom image", 2D) = "black" {} }
+    Properties
+    {
+        _MainTex ("Zoom image", 2D) = "black" {}
+        [Toggle] _FlipY ("Flip capture vertically", Float) = 1
+    }
     SubShader
     {
         Tags { "Queue"="Overlay" "RenderType"="Transparent" }
@@ -12,6 +16,7 @@ Shader "KiroshiZoom/Display"
             #pragma fragment frag
             #include "UnityCG.cginc"
             sampler2D _MainTex;
+            float _FlipY;
             float _VRChatMirrorMode;
             float _VRChatCameraMode;
             struct appdata { float4 vertex : POSITION; float2 uv : TEXCOORD0; };
@@ -28,6 +33,10 @@ Shader "KiroshiZoom/Display"
             {
                 // Keep the display out of mirrors and VRChat's photo camera.
                 clip(0.5 - max(_VRChatMirrorMode, _VRChatCameraMode));
+                // The capture camera uses 6..30 degrees (projection Y >= 3.73).
+                // Never sample its render target while that camera is rendering it.
+                // A player camera with an equally narrow FOV is also suppressed.
+                clip(3.7 - abs(UNITY_MATRIX_P._m11));
                 // Personal mirrors do not always expose the same mirror flag.
                 // Only draw for a viewpoint close to the scope's eye anchor.
                 float3 eyeAnchor = mul(unity_ObjectToWorld, float4(0,0,0,1)).xyz;
@@ -38,6 +47,7 @@ Shader "KiroshiZoom/Display"
                                 + (1-step(0.0015,p.y))*step(p.x,0.018);
                 float aspect = _ScreenParams.x / _ScreenParams.y;
                 float2 uv = (i.uv - 0.5) * float2(1, 1 / aspect) + 0.5;
+                uv.y = lerp(uv.y, 1 - uv.y, _FlipY);
                 fixed3 scene = tex2D(_MainTex, uv).rgb;
                 return fixed4(lerp(scene, fixed3(0.05,1,0.8), saturate(border+crosshair)),1);
             }
